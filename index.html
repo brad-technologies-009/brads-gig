@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS-Style Website | API Comparison</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Dancing+Script&family=Petit+Formal+Script&family=Marck+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300&family=Poppins:wght@100;300&family=Montserrat:wght@100;300&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amazon+Ember:wght@300;400;500;600;700&display=swap');
+    </style>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body :class="{ 'rtl': currentLanguage === 'arabic' }">
+    <div id="app">
+        <!-- Background Animation -->
+        <div class="background-animation">
+            <div class="animated-shape shape-1"></div>
+            <div class="animated-shape shape-2"></div>
+            <div class="animated-shape shape-3"></div>
+        </div>
+        
+        <!-- First Navbar -->
+        <nav class="bg-[#232f3e] text-white py-[18px] px-4 fixed top-0 left-0 right-0 z-40">
+            <div class="container mx-auto flex justify-end items-center">
+                <div class="flex space-x-10 text-lg font-normal">
+                    <div class="language-selector group">
+                        <span class="flex items-center">
+                            <i class="fas fa-globe mr-1"></i> 
+                            {{ translations[currentLanguage].currentLanguage }}
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </span>
+                        <div class="language-options ">
+                            <div v-for="(lang, key) in languages" :key="key" 
+                                 class="language-option" 
+                                 @click="changeLanguage(key)">
+                                <img :src="`https://flagcdn.com/24x18/${lang.flag}.png`" 
+                                     :alt="lang.name" 
+                                     class="language-flag">
+                                <span>{{ lang.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#" class="hover:underline">{{ translations[currentLanguage].contactUs }}</a>
+                    <a href="#" class="hover:underline">{{ translations[currentLanguage].support }}</a>
+                    <div class="relative group cursor-pointer">
+                        <span class="flex items-center">
+                            {{ translations[currentLanguage].myAccount }}
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </span>
+                        <div class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded shadow-lg py-1 hidden group-hover:block">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">{{ translations[currentLanguage].accountSettings }}</a>
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">{{ translations[currentLanguage].billing }}</a>
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">{{ translations[currentLanguage].signOut }}</a>
+                        </div>
+                    </div>
+                    <div>
+                        <i class="fas fa-user ml-1 text-xs"></i>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Second Navbar -->
+        <nav class="bg-[#FFFFF0] py-4 px-4 fixed mt-16 left-0 right-0 z-30 shadow-sm">
+            <div class="w-full ml-8 mx-auto flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="text-3xl font-extrabold text-[#161D26] mr-8">
+                        <span class="text-[#161D26]-500 font-[Roboto]">BRAD</span>
+                    </div>
+                    <button class="q-button text-[#161D26] font-normal py-2.5 px-7 rounded-xl text-lg">
+                        Products
+                    </button>
+                    <div class="hidden md:flex space-x-16 ml-12 text-lg">
+                        <a href="#" class="nav-link relative text-[#161D26] font-medium">{{ translations[currentLanguage].products }}</a>
+                        <a href="#" class="nav-link relative text-[#161D26] font-medium">{{ translations[currentLanguage].solutions }}</a>
+                        <a href="#" class="nav-link relative text-[#161D26] font-medium">{{ translations[currentLanguage].pricing }}</a>
+                        <a href="#" class="nav-link relative text-[#161D26] font-medium">{{ translations[currentLanguage].documentation }}</a>
+                        <a href="#" class="nav-link relative text-[#161D26] font-medium">{{ translations[currentLanguage].learn }}</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6 mr-16">
+                    <div class="search-container" :class="{ 'expanded': searchExpanded }">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            :placeholder="translations[currentLanguage].searchPlaceholder"
+                            v-model="searchQuery"
+                            @focus="searchExpanded = true"
+                            ref="searchInput"
+                        >
+                        <button class="text-[#161D26] text-xl" @click="toggleSearch">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <div class="search-results" v-if="searchExpanded && searchQuery">
+                            <div 
+                                v-for="(project, index) in filteredProjects" 
+                                :key="index" 
+                                class="search-result-item"
+                                @click="selectProject(project)"
+                            >
+                                <div class="search-result-title">{{ project.name }}</div>
+                                <div class="search-result-desc">{{ project.description }}</div>
+                            </div>
+                            <div v-if="filteredProjects.length === 0" class="search-result-item text-center text-gray-500">
+                                {{ translations[currentLanguage].noResults }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-4">
+                        <button class="text-[#161D26] text-lg hover:text-blue-600">{{ translations[currentLanguage].signIn }}</button>
+                    </div>
+                    <button class="md:hidden text-[#161D26]">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main>
+            <div class="pt-64 pb-48 relative z-10 fade-transition" :style="{ opacity: contentOpacity }">
+                <div class="container mx-auto">
+                    <!-- BreadCrumb -->
+                    <div class="px-4">
+                        <h1 class="text-xl font-normal text-[#161D26]">Trust in us / Experience the Best / Get Uncompromised Quality</h1>
+                    </div>
+                    <div class="mx-auto px-4 pt-36 pb-36">
+                        <!-- Headline -->
+                        <h1 class="xl:text-8xl md:text-5xl font-bold text-[#161D26] mb-10 font-[Roboto]">
+                            {{ translations[currentLanguage].title }}
+                        </h1>
+                        <!-- Subtitle -->
+                        <p class="text-xl md:text-2xl text-gray-700 mx-auto mb-6 text-[#161D26]">
+                            {{ translations[currentLanguage].subtitle }}
+                        </p>
+                        <!-- CTA Buttons -->
+                        <div class="hidden md:flex items-center space-x-4 mb-8">
+                            <button class="bg-[#161D26] hover:bg-[#161D26] text-white py-4 px-8 rounded-full text-lg font-medium">
+                                CONTACT US
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- Footer with Parabolic Shape -->
+        <footer class="parabolic-footer relative bg-[#232f3e] text-white pt-20 pb-12">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">{{ translations[currentLanguage].awsServices }}</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].compute }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].storage }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].databases }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].networking }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].security }}</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">{{ translations[currentLanguage].resources }}</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].documentation }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].devCenter }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].training }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].blog }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].faqs }}</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">{{ translations[currentLanguage].company }}</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].aboutUs }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].leadership }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].careers }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].press }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].partners }}</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">{{ translations[currentLanguage].support }}</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].contactUs }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].techSupport }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].billingSupport }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].documentation }}</a></li>
+                            <li><a href="#" class="hover:text-white">{{ translations[currentLanguage].forums }}</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-12 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center">
+                    <div class="flex items-center mb-4 md:mb-0">
+                        <div class="text-2xl font-bold mr-2">
+                            <span class="text-orange-500">BRAD</span>
+                        </div>
+                        <span class="text-gray-400 text-sm">{{ translations[currentLanguage].copyright }}</span>
+                    </div>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-youtube"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
